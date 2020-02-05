@@ -15,13 +15,12 @@ int prng(int N=100)
 	return r;
 }
 
-__global__ void add_arrays(int *a, int *b, int n)
+__global__ void add_arrays(int *a, int *b, int *c, int n)
 {
-	int id = blockIdx.x*blockDim.x+threadIdx.x;
-	if(id<n)
-	{
-		a[id]+=1;
-	}
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
+        c[i] = a[i] + b[i];
+    }
 }
 
 int main()
@@ -37,14 +36,14 @@ int main()
 	{
 		a[i] = prng();
 		b[i] = prng();
-		c[i] = a[i];
+		c[i] = 0;
 	}
 
-	int *dev_a, *dev_b;//, *dev_c;
+	int *dev_a, *dev_b, *dev_c;
 
 	if(cudaMalloc((void**)&dev_a, sizeof(int)*n)==cudaSuccess
-		&& cudaMalloc((void**)&dev_b, sizeof(int)*n)==cudaSuccess)
-		//&& cudaMalloc((void**)&dev_c, sizeof(int)*n)==cudaSuccess)
+		&& cudaMalloc((void**)&dev_b, sizeof(int)*n)==cudaSuccess
+		&& cudaMalloc((void**)&dev_c, sizeof(int)*n)==cudaSuccess)
 	{
 		NULL;
 	}
@@ -54,22 +53,21 @@ int main()
 		exit(0);
 	}
 
-	cudaMemcpy(dev_a, &a, sizeof(a)*n,cudaMemcpyHostToDevice);
-	cudaMemcpy(dev_b, &b, sizeof(b)*n,cudaMemcpyHostToDevice);
-	//cudaMemcpy(dev_c, &c, sizeof(c)*n,cudaMemcpyHostToDevice);
+	cudaMemcpy(dev_a, a, sizeof(int)*n,cudaMemcpyHostToDevice);
+	cudaMemcpy(dev_b, b, sizeof(int)*n,cudaMemcpyHostToDevice);
+	cudaMemcpy(dev_c, c, sizeof(int)*n,cudaMemcpyHostToDevice);
 
-	add_arrays<<<1,n>>>(dev_a, dev_b, n);
-	cudaMemcpy(&a, dev_a, sizeof(c)*n,cudaMemcpyDeviceToHost);
+	add_arrays<<<1,n>>>(dev_a, dev_b, dev_c, n);
+	cudaMemcpy(c, dev_c, sizeof(int)*n,cudaMemcpyDeviceToHost);
 
 
 	for(unsigned long long int i=0;i<n;i++)
 	{
-		//cout<<a[i]<<'+'<<b[i]<<"="<<c[i]<<endl;
-		cout<<c[i]<<' '<<a[i]<<endl;
+		cout<<a[i]<<'+'<<b[i]<<"="<<c[i]<<endl;
 	}
 
 	free(a); free(b); free(c);
-	cudaFree(dev_a); cudaFree(dev_b); //cudaFree(dev_c);
+	cudaFree(dev_a); cudaFree(dev_b); cudaFree(dev_c);
 
 	return 0;
 }
