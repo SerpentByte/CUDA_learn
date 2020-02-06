@@ -27,7 +27,7 @@ __global__ void add_arrays(int *a, int *b, int *c, int n)
 
 void display(int *A, int n)
 {
-	for(unsigned long long int i=0;i<n;i++)
+	for(size_t i=0;i<n;i++)
 	{
 		cout<<A[i]<<' ';
 	}
@@ -38,16 +38,16 @@ int main(int argc, char* argv[])
 {
 	system("clear");
 
-	unsigned long long int n = 1e7;
+	size_t n = 1e7;
 	if(argc>1)
 	{
-		n = (unsigned long long int)atoi(argv[1]);
+		n = (size_t)atoi(argv[1]);
 	}
 	int *a = (int*)malloc(n*sizeof(int));
 	int *b = (int*)malloc(n*sizeof(int));
 	int *c = (int*)malloc(n*sizeof(int));
 
-	for(unsigned long long int i=0;i<n;i++)
+	for(size_t i=0;i<n;i++)
 	{
 		a[i] = prng();
 		b[i] = prng();
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 	cudaMemcpy(dev_b, b, sizeof(int)*n,cudaMemcpyHostToDevice);
 	cudaMemcpy(dev_c, c, sizeof(int)*n,cudaMemcpyHostToDevice);
 
-	cout<<"Arrays copied to device."<<endl;
+	//cout<<"Arrays copied to device."<<endl;
 
 	auto start = chrono::high_resolution_clock::now();
 	add_arrays<<<1+(n/256),n>>>(dev_a, dev_b, dev_c, n);
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
 	double exec_t = chrono::duration_cast<chrono::microseconds>(end-start).count();
 	cudaMemcpy(c, dev_c, sizeof(int)*n,cudaMemcpyDeviceToHost);
 
-	cout<<"Sum copied from device."<<endl;
+	//cout<<"Sum copied from device."<<endl;
 
 	//display(c,n);
 	cout<<"n = "<<n<<endl<<"Time taken = "<<exec_t<<" us\n";
